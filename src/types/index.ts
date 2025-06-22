@@ -5,3 +5,12 @@ export interface SensorData {
     z_axis: number;
     is_calibrated: boolean;
 }
+
+export interface ProcessedData {
+    velX: number;
+    velY: number;
+    velZ: number;
+    accelX: number;
+    accelY: number;
+    accelZ: number;
+}

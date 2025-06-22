@@ -1,7 +1,7 @@
 // src/hooks/useBluetooth.ts
 import { useState, useCallback, useRef, useEffect } from "react";
 import { parseSensorData } from "@/utils/parser";
-import type { SensorData } from "@/types";
+import type { ProcessedData, SensorData } from "@/types";
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -9,9 +9,8 @@ const BATCH_TIMEOUT_MS = 1000;
 
 export function useBluetooth() {
   const [isConnected, setIsConnected] = useState(false);
-  const [data, setData] = useState<SensorData | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const [processedData, setProcessedData] = useState<number[] | null>(null);
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const batchBufferRef = useRef<ArrayBuffer>(new ArrayBuffer(17*50));
   const batchBufferViewRef = useRef<DataView>(new DataView(batchBufferRef.current));
   const batchBufferIndexRef = useRef<number>(0);
@@ -23,7 +22,7 @@ export function useBluetooth() {
       { type: "module" }
     );
 
-    workerRef.current.onmessage = (event: MessageEvent<number[]>) => {
+    workerRef.current.onmessage = (event: MessageEvent<ProcessedData>) => {
       console.log("Received processed batch from worker:", event.data);
       setProcessedData(event.data);
     };
@@ -116,5 +115,5 @@ export function useBluetooth() {
     }
   }, [handleCharacteristicValueChanged]);
 
-  return { connect, isConnected, data, processedData };
+  return { connect, isConnected, processedData };
 }
