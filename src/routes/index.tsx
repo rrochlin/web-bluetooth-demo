@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import '../App.css'
 import { ConnectButton } from '@/components/ConnectButton'
 import { useBluetooth } from '@/hooks/useBluetooth'
-import { ThreeDVisualizer } from '@/components/3DVisualizer'
+import { MovementGraph } from '@/components/MovementGraph'
 
 export const Route = createFileRoute('/')({
   component: App,
@@ -16,7 +16,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <ConnectButton onConnect={connect} isConnected={isConnected} />
-        <ThreeDVisualizer latestProcessedData={processedData} />
+        {processedData && <MovementGraph data={processedData} />}
       </header>
     </div>
   )

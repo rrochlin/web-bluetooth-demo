@@ -7,6 +7,7 @@ export interface SensorData {
 }
 
 export interface ProcessedData {
+    timestamp: number;
     velX: number;
     velY: number;
     velZ: number;

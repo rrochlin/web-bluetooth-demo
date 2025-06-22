@@ -1,7 +1,7 @@
 // src/hooks/useBluetooth.ts
 import { useState, useCallback, useRef, useEffect } from "react";
 import { parseSensorData } from "@/utils/parser";
-import type { ProcessedData, SensorData } from "@/types";
+import type { ProcessedData } from "@/types";
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -10,11 +10,15 @@ const BATCH_TIMEOUT_MS = 1000;
 export function useBluetooth() {
   const [isConnected, setIsConnected] = useState(false);
   const workerRef = useRef<Worker | null>(null);
-  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
+  const dataRef = useRef<ProcessedData[]>([]);
+  const dataIndexRef = useRef<number>(0);
+  const MAX_DATA_POINTS = 2000;
+
   const batchBufferRef = useRef<ArrayBuffer>(new ArrayBuffer(17*50));
   const batchBufferViewRef = useRef<DataView>(new DataView(batchBufferRef.current));
   const batchBufferIndexRef = useRef<number>(0);
   const batchTimeoutRef = useRef<number | null>(null);
+  const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
 
   useEffect(() => {
     workerRef.current = new Worker(
@@ -22,9 +26,17 @@ export function useBluetooth() {
       { type: "module" }
     );
 
-    workerRef.current.onmessage = (event: MessageEvent<ProcessedData>) => {
-      console.log("Received processed batch from worker:", event.data);
-      setProcessedData(event.data);
+    workerRef.current.onmessage = (event: MessageEvent<ProcessedData[]>) => {
+      for (let i = 0; i < event.data.length; i++) {
+        dataRef.current[dataIndexRef.current] = event.data[i];
+        dataIndexRef.current++;
+        if (dataIndexRef.current >= MAX_DATA_POINTS) {
+          dataIndexRef.current = 0;
+        }
+      }
+      
+      const currentData = [...dataRef.current];
+      setProcessedData(currentData);
     };
 
     return () => {
@@ -35,7 +47,7 @@ export function useBluetooth() {
     };
   }, []);
 
-  const sendBatch = () => {
+  const sendBatch = useCallback(() => {
     if (batchBufferIndexRef.current === 0 || !workerRef.current) return;
     if (batchTimeoutRef.current) {
       clearTimeout(batchTimeoutRef.current);
@@ -46,19 +58,19 @@ export function useBluetooth() {
     batchBufferRef.current = new ArrayBuffer(17*50);
     batchBufferViewRef.current = new DataView(batchBufferRef.current);
     batchBufferIndexRef.current = 0;
-  };
+  }, []);
 
-  const scheduleBatchSend = () => {
-    if (batchTimeoutRef.current) return; // Already scheduled
+  const scheduleBatchSend = useCallback(() => {
+    if (batchTimeoutRef.current) return;
     
     batchTimeoutRef.current = window.setTimeout(() => {
       sendBatch();
     }, BATCH_TIMEOUT_MS);
-  };
+  }, [sendBatch]);
 
   const handleCharacteristicValueChanged = useCallback((event: Event) => {
     const target = event.target as BluetoothRemoteGATTCharacteristic;
-    const value = target.value; // This is a DataView
+    const value = target.value;
 
     if (value) {
       const bufferCopy = parseSensorData(value.buffer);
@@ -71,11 +83,9 @@ export function useBluetooth() {
         batchBufferIndexRef.current += 17;
       }
 
-      // Send batch if we've reached the size limit
       if (batchBufferIndexRef.current >= 17*50) {
         sendBatch();
       } else {
-        // Schedule a timeout to send partial batch
         scheduleBatchSend();
       }
     }
