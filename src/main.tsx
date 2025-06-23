@@ -2,6 +2,10 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
+// getting MUI to play nicely with Tailwind
+import { StyledEngineProvider } from '@mui/material/styles'
+import GlobalStyles from '@mui/material/GlobalStyles'
+
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
@@ -31,7 +35,10 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <StyledEngineProvider enableCssLayer>
+        <GlobalStyles styles="@layer theme, base, mui, components, utilities;" />
+        <RouterProvider router={router} />
+      </StyledEngineProvider>
     </StrictMode>,
   )
 }

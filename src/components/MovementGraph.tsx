@@ -28,23 +28,12 @@ export function MovementGraph({ data }: MovementGraphProps) {
     return [];
   }, [data]);
 
-  // Define explicit ticks for 0-20 seconds in 4-second intervals
   const timeTicks = [0, 4, 8, 12, 16, 20];
 
   if (chartData.length === 0) {
     return (
-      <div style={{ 
-        width: '75%', 
-        height: 400, 
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'transparent',
-        border: '1px solid #e9ecef',
-        borderRadius: '8px'
-      }}>
-        <p style={{ color: '#fff', fontSize: '16px' }}>
+      <div className="w-3/4 mx-auto flex items-center justify-center h-full">
+        <p className="text-white text-lg text-center">
           No data available. Connect to device to see movement data.
         </p>
       </div>
@@ -52,8 +41,8 @@ export function MovementGraph({ data }: MovementGraphProps) {
   }
 
   return (
-    <div style={{ width: '75%', margin: '0 auto' }}>
-      <h3 style={{ margin: '20px 0 10px 0' }}>Velocity over Time (20s Window)</h3>
+    <div className="w-3/4 mx-auto">
+      <h3 className="text-2xl font-bold mb-4">Velocity over Time (20s Window)</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart
           data={chartData}
@@ -65,14 +54,14 @@ export function MovementGraph({ data }: MovementGraphProps) {
             domain={[0, 20]}
             ticks={timeTicks}
             tickFormatter={(value) => `${value}s`}
-            tick={{ fontSize: 12, fill: '#666' }}
+            tick={{ fontSize: 12, fill: '#fff' }}
             allowDataOverflow={true}
             type="number"
           />
           <YAxis 
             allowDataOverflow={true}
             domain={[-2, 2]}
-            tick={{ fontSize: 12, fill: '#666' }}
+            tick={{ fontSize: 12, fill: '#fff' }}
           />
           <Legend />
           <Line type="monotone" dataKey="velX" stroke="#8884d8" name="Velocity X" dot={false} strokeWidth={2} />
@@ -81,7 +70,7 @@ export function MovementGraph({ data }: MovementGraphProps) {
         </LineChart>
       </ResponsiveContainer>
       
-      <h3 style={{ margin: '30px 0 10px 0' }}>Acceleration over Time (20s Window)</h3>
+      <h3 className="text-2xl font-bold">Acceleration over Time (20s Window)</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart 
           data={chartData}
@@ -93,14 +82,14 @@ export function MovementGraph({ data }: MovementGraphProps) {
             domain={[0, 20]}
             ticks={timeTicks}
             tickFormatter={(value) => `${value}s`}
-            tick={{ fontSize: 12, fill: '#666' }}
+            tick={{ fontSize: 12, fill: '#fff' }}
             allowDataOverflow={true}
             type="number"
           />
           <YAxis 
             allowDataOverflow={true}
             domain={[-0.02, 0.02]}
-            tick={{ fontSize: 12, fill: '#666' }}
+            tick={{ fontSize: 12, fill: '#fff' }}
           />
           <Legend />
           <Line type="monotone" dataKey="accelX" stroke="#8884d8" name="Acceleration X" dot={false} strokeWidth={2} />

@@ -3,13 +3,15 @@ import viteReact from '@vitejs/plugin-react'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { resolve } from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ autoCodeSplitting: true }), 
     viteReact(),
-    basicSsl()
+    basicSsl(),
+    tailwindcss(),
   ],
   test: {
     globals: true,
