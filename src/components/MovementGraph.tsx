@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from 'recharts';
 import type { ProcessedData } from '@/types';
 import { useMemo } from 'react';
 
@@ -14,7 +14,7 @@ export function MovementGraph({ data }: MovementGraphProps) {
     const timeDelay = now - 20000;
     
     const recentData = data.filter(item => item.timestamp >= timeDelay);
-    recentData.sort((a, b) => a.timestamp - b.timestamp);
+    console.log(recentData);
     
     if (recentData.length > 0) {
       const startTime = recentData[0].timestamp;
@@ -70,6 +70,8 @@ export function MovementGraph({ data }: MovementGraphProps) {
             type="number"
           />
           <YAxis 
+            allowDataOverflow={true}
+            domain={[-2, 2]}
             tick={{ fontSize: 12, fill: '#666' }}
           />
           <Legend />
@@ -96,6 +98,8 @@ export function MovementGraph({ data }: MovementGraphProps) {
             type="number"
           />
           <YAxis 
+            allowDataOverflow={true}
+            domain={[-0.02, 0.02]}
             tick={{ fontSize: 12, fill: '#666' }}
           />
           <Legend />

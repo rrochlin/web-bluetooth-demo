@@ -1,11 +1,5 @@
 import type { ProcessedData, SensorData } from "@/types";
 
-let vx = 0;
-let vy = 0;
-let vz = 0;
-let ax = 0;
-let ay = 0;
-let az = 0;
 
 self.onmessage = (event: MessageEvent<ArrayBuffer>) => {
     const buffer = event.data;
@@ -25,47 +19,52 @@ self.onmessage = (event: MessageEvent<ArrayBuffer>) => {
             is_calibrated: view.getUint8(offset + 16) !== 0,
         });
     }
+    collectedData.sort((a, b) => a.timestamp - b.timestamp);
     
     self.postMessage(processSensorData(collectedData));
 }
 
+function getVelocity(p1: number, p2: number, dt: number) {
+    return (p2 - p1) / dt;
+}
+
+function getAcceleration(v1: number, v2: number, dt: number) {
+    return (v2 - v1) / dt;
+}
+
 function processSensorData(data: SensorData[]): ProcessedData[] {
-    let px = data[0].x_axis;
-    let py = data[0].y_axis;
-    let pz = data[0].z_axis;
-    let pt = data[0].timestamp;
-    let x_vels: number[] = [vx];
-    let y_vels: number[] = [vy];
-    let z_vels: number[] = [vz];
-    let x_accs: number[] = [ax];
-    let y_accs: number[] = [ay];
-    let z_accs: number[] = [az];
-    for (const item of data.slice(1)) {
-        const dt = item.timestamp - pt;
-        const dx = item.x_axis - px;
-        const dy = item.y_axis - py;
-        const dz = item.z_axis - pz;
-        if (dt > 0) {
-            vx = dx / dt;
-            vy = dy / dt;
-            vz = dz / dt;
-            ax = (vx - x_vels[x_vels.length - 1]) / dt;
-            ay = (vy - y_vels[y_vels.length - 1]) / dt;
-            az = (vz - z_vels[z_vels.length - 1]) / dt;
+    let timesstamps: number[] = []
+    let x_vels: number[] = []
+    let y_vels: number[] = []
+    let z_vels: number[] = []
+    let x_accs: number[] = []
+    let y_accs: number[] = []
+    let z_accs: number[] = []
+    for (let i = 2; i < data.length; i++) {
+        const dt1 = data[i].timestamp - data[i-1].timestamp;
+        const dt2 = data[i-1].timestamp - data[i-2].timestamp;
+        if (dt1 != dt2) {
+            continue;
         }
+        const vx = getVelocity(data[i-1].x_axis, data[i].x_axis, dt1);
+        const pvx = getVelocity(data[i-2].x_axis, data[i-1].x_axis, dt2);
+        const vy = getVelocity(data[i-1].y_axis, data[i].y_axis, dt1);
+        const pvy = getVelocity(data[i-2].y_axis, data[i-1].y_axis, dt2);
+        const vz = getVelocity(data[i-1].z_axis, data[i].z_axis, dt1);
+        const pvz = getVelocity(data[i-2].z_axis, data[i-1].z_axis, dt2);
+        const ax = getAcceleration(vx, pvx, dt2+dt1);
+        const ay = getAcceleration(vy, pvy, dt2+dt1);
+        const az = getAcceleration(vz, pvz, dt2+dt1);
+        timesstamps.push(data[i].timestamp);
         x_vels.push(vx);
         y_vels.push(vy);
         z_vels.push(vz);
         x_accs.push(ax);
         y_accs.push(ay);
-        z_accs.push(az); 
-        px = item.x_axis;
-        py = item.y_axis;
-        pz = item.z_axis;
-        pt = item.timestamp;
+        z_accs.push(az);
     }
-    return data.map((item, index) => ({
-        timestamp: item.timestamp,
+    return timesstamps.map((timestamp, index) => ({
+        timestamp: timestamp,
         velX: x_vels[index],
         velY: y_vels[index],
         velZ: z_vels[index],

@@ -10,8 +10,6 @@ const BATCH_TIMEOUT_MS = 1000;
 export function useBluetooth() {
   const [isConnected, setIsConnected] = useState(false);
   const workerRef = useRef<Worker | null>(null);
-  const dataRef = useRef<ProcessedData[]>([]);
-  const dataIndexRef = useRef<number>(0);
   const MAX_DATA_POINTS = 2000;
 
   const batchBufferRef = useRef<ArrayBuffer>(new ArrayBuffer(17*50));
@@ -27,16 +25,7 @@ export function useBluetooth() {
     );
 
     workerRef.current.onmessage = (event: MessageEvent<ProcessedData[]>) => {
-      for (let i = 0; i < event.data.length; i++) {
-        dataRef.current[dataIndexRef.current] = event.data[i];
-        dataIndexRef.current++;
-        if (dataIndexRef.current >= MAX_DATA_POINTS) {
-          dataIndexRef.current = 0;
-        }
-      }
-      
-      const currentData = [...dataRef.current];
-      setProcessedData(currentData);
+      setProcessedData(prev => [...prev.slice(prev.length + event.data.length > MAX_DATA_POINTS ? event.data.length : 0), ...event.data]);
     };
 
     return () => {
